@@ -1,0 +1,77 @@
+# Model arguments
+model_name_or_path: /vepfs-d-data/q-caiyue/zlf/model/Qwen2.5-7B-Instruct
+model_revision: main
+torch_dtype: bfloat16
+attn_implementation: flash_attention_2
+
+# Data training arguments
+dataset_name: "/vepfs-d-data/q-caiyue/zlf/open-r1/data"
+dataset_train_split: "train"
+dataset_test_split: "test"
+dataset_configs:
+- default
+system_prompt: "You are a helpful AI Assistant that provides well-reasoned and detailed responses. You first think about the reasoning process as an internal monologue and then provide the user with the answer. Respond in the following format: <think>\n...\n</think>\n<answer>\n...\n</answer>"
+#system_prompt: "您是一个强大的 AI 助手，可提供合理且详细的响应。您首先将推理过程视为内部独白，然后为用户提供答案。请以以下格式回复：<think>n...n</think>n<answer>n...n</answer>"
+
+#beta: 0
+#beta: 0.1  # 添加适当的beta值
+#kl_coef: 0.1  # KL散度系数
+#reward_scale: 1.0  # 奖励缩放因子
+
+# GRPO trainer config
+bf16: true
+use_vllm: true
+vllm_device: "cuda:7"
+vllm_gpu_memory_utilization: 0.6
+do_eval: false
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+hub_model_id: Qwen2.5-7B
+hub_strategy: every_save
+learning_rate: 5e-5
+
+# ==================== 日志记录配置 ==================== 
+log_completions: true      # 是否记录生成的完整文本（可能包含敏感信息）
+log_level: info            # 日志级别（debug/info/warning/error）
+logging_first_step: true   # 在第一个训练步骤记录详细日志
+logging_steps: 1           # 每1个训练步骤记录一次日志
+logging_strategy: steps    # 日志记录策略（steps/epoch）
+
+# ==================== 训练调度配置 ====================
+lr_scheduler_type: cosine  # 学习率调度器类型（cosine/linear/constant等）
+warmup_ratio: 0.1          # 学习率预热占总训练步数的比例（10%步骤预热）
+max_steps: 2000            # 最大训练步数（优先级高于num_train_epochs）
+num_train_epochs: 3        # 最大训练轮次（与max_steps二选一）
+seed: 42                   # 随机种子（确保实验可复现）
+
+# ==================== 模型输入输出配置 ====================
+max_prompt_length: 35000    # 输入提示词的最大token长度
+max_completion_length: 8000 # 生成文本的最大token长度
+num_generations: 7         # 每次推理生成的候选文本数量（用于强化学习采样）
+output_dir: data/Qwen2.5-7B-Instruct-TFNS-GRPO  # 模型和日志输出目录
+overwrite_output_dir: true  # 是否覆盖已有输出目录
+
+# ==================== 批量大小配置 ====================
+per_device_train_batch_size: 1  # 每个GPU的训练批次大小（根据显存调整）
+per_device_eval_batch_size: 1   # 每个GPU的评估批次大小
+
+# ==================== 奖励函数配置 ====================
+reward_funcs:              # 使用的奖励函数列表
+  - accuracy               # 答案准确性奖励（权重0.6）
+  - format                 # 文本格式规范性奖励（权重0.25）
+  - length                 # 生成长度合理性奖励（权重0.15）
+reward_weights:            # 对应奖励函数的权重（总和建议为1）
+  - 0.6
+  - 0.25
+  - 0.15
+
+# ==================== 模型保存配置 ====================
+save_strategy: steps       # 保存策略（steps/epoch/no）
+save_steps: 500            # 每500步保存一次检查点
+save_total_limit: 2        # 最多保留2个检查点（自动删除旧的）
+
+# ==================== 其他配置 ====================
+push_to_hub: false         # 是否推送模型到HuggingFace Hub
+report_to: []              # 不向任何平台报告结果（如wandb/tensorboard）
