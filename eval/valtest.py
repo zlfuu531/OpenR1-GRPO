@@ -19,7 +19,7 @@ logging.basicConfig(
 )
 
 # 初始化裁判模型
-JUDGE_CLIENT = ZhipuAI(api_key="e67dc04d7e20bee317d6022fff6aff64.PDHRceVeSSL0QhN6")
+JUDGE_CLIENT = ZhipuAI(api_key="")  
 
 def load_test_data(json_path):
     """加载测试数据集"""
